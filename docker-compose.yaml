@@ -1,0 +1,54 @@
+services:
+    php:
+        container_name: gaming-tracker-php
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
+        volumes:
+            - .:/var/www/symfony
+        depends_on:
+            database:
+                condition: service_healthy
+        networks:
+            - gaming-tracker-network
+
+    nginx:
+        container_name: gaming-tracker-nginx
+        image: nginx:alpine
+        ports:
+            - "8080:80"
+        volumes:
+            - .:/var/www/symfony
+            - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - php
+        networks:
+            - gaming-tracker-network
+
+    database:
+        container_name: gaming-tracker-database
+        image: mysql:8.0
+        env_file:
+            - .env.docker
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: app
+            MYSQL_USER: app
+            MYSQL_PASSWORD: app
+        ports:
+            - "3306:3306"
+        volumes:
+            - db_data:/var/lib/mysql
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+            timeout: 5s
+            retries: 10
+        networks:
+            - gaming-tracker-network
+
+volumes:
+    db_data:
+
+networks:
+    gaming-tracker-network:
+        driver: bridge
