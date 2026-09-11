@@ -12,9 +12,9 @@ RUN apt-get update && apt-get install -y \
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-COPY docker/php.ini /usr/local/etc/php/conf.d/zz-app.ini
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/zz-app.ini
 
-COPY docker/entrypoint.sh /usr/local/bin/docker-app-entrypoint
+COPY docker/php/entrypoint.sh /usr/local/bin/docker-app-entrypoint
 RUN chmod +x /usr/local/bin/docker-app-entrypoint
 
 WORKDIR /var/www/symfony

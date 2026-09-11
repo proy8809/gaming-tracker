@@ -1,23 +1,45 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        {% endblock %}
+<html lang="en" class="scheme-dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gaming Tracker{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>🎮</text></svg>">
+    <link rel="stylesheet" href="{{ asset('assets/app.css') }}">
+    {% block stylesheets %}{% endblock %}
+    {% block javascripts %}{% endblock %}
 
-        {% block javascripts %}
-        {% endblock %}
+    {% set frankenphp_hot_reload = app.request.server.get('FRANKENPHP_HOT_RELOAD') %}
+    {% if frankenphp_hot_reload %}
+    <meta name="frankenphp-hot-reload:url" content="{{ frankenphp_hot_reload }}">
+    <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
+    <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
+    {% endif %}
+</head>
+<body class="min-h-screen bg-surface-950 bg-linear-to-br from-surface-950 via-surface-950 to-steam-900/5 font-sans text-surface-100 antialiased selection:bg-steam-500/30 selection:text-white">
+    {% import 'frontend/components/icons.html.twig' as icons %}
+    <a href="#main-content" class="sr-only fixed top-3 left-4 z-50 rounded-lg bg-steam-600 px-4 py-3 font-medium text-white focus:not-sr-only">Skip to content</a>
+    <nav aria-label="Main navigation" class="sticky top-0 z-40 border-b border-white/8 bg-surface-950/85 backdrop-blur-xl">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 items-center justify-between">
+                <a href="{{ path('frontend_dashboard_index') }}" class="flex items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-steam-400">
+                    <span class="flex size-9 items-center justify-center rounded-xl border border-steam-400/25 bg-linear-to-br from-steam-500/25 to-steam-500/5 text-steam-300">
+                        {{ icons.icon('controller', 'size-6') }}
+                    </span>
+                    <span class="text-sm font-semibold tracking-tight text-surface-100 sm:text-base">Gaming Tracker</span>
+                </a>
+                <div class="flex items-center gap-4">
+                    <a href="{{ path('frontend_dashboard_index') }}" {% if app.request.attributes.get('_route') == 'frontend_dashboard_index' %}aria-current="page"{% endif %} class="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium text-surface-500 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-steam-400 aria-[current=page]:bg-steam-500/10 aria-[current=page]:text-steam-200">
+                        {{ icons.icon('grid', 'hidden size-4 sm:block') }}
+                        Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-        {% set frankenphp_hot_reload = app.request.server.get('FRANKENPHP_HOT_RELOAD') %}
-        {% if frankenphp_hot_reload %}
-        <meta name="frankenphp-hot-reload:url" content="{{ frankenphp_hot_reload }}">
-        <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
-        <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
-        {% endif %}
-    </head>
-    <body>
+    <main id="main-content" class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         {% block body %}{% endblock %}
-    </body>
+    </main>
+</body>
 </html>

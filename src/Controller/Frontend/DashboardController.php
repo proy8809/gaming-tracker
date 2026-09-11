@@ -8,11 +8,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
+#[Route(path: '/', name: 'frontend_dashboard_')]
 class DashboardController extends AbstractController
 {
-    #[Route(path: "/", name: "dashboard", methods: ["GET"])]
-    public function index(): Response
+    #[Route(name: 'index', methods: ['GET'])]
+    public function __invoke(): Response
     {
-        return new Response("I am dashboard, bow before me.");
+        return $this->render('frontend/dashboard/index.html.twig');
     }
 }

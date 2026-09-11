@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+{% import 'frontend/components/icons.html.twig' as icons %}
+
+{% block title %}Dashboard - Gaming Tracker{% endblock %}
+
+{% block body %}
+{# Existing dashboard sample data, kept together so every card shares one template. #}
+{% set stats = [
+    {label: 'Avg. per Day', value: '2h 34m', caption: 'since last sync', icon: 'clock', accent: 'bg-steam-400', tint: 'bg-steam-500/10 text-steam-300 ring-steam-400/20'},
+    {label: 'Total Played', value: '18h 27m', caption: 'since last sync', icon: 'chart', accent: 'bg-purple-400', tint: 'bg-purple-500/10 text-purple-300 ring-purple-400/20'},
+    {label: 'New Games', value: '3', caption: 'since last sync', icon: 'plus', accent: 'bg-emerald-400', tint: 'bg-emerald-500/10 text-emerald-300 ring-emerald-400/20'},
+    {label: 'Library', value: '87', caption: 'total games', icon: 'library', accent: 'bg-amber-400', tint: 'bg-amber-500/10 text-amber-300 ring-amber-400/20'}
+] %}
+{% set games = [
+    {id: 292030, name: 'The Witcher 3: Wild Hunt', total: '127h 43m', recent: '4h 12m', sinceSync: '127h 43m', perDay: '4h 15m', price: '$49.99'},
+    {id: 1091500, name: 'Cyberpunk 2077', total: '86h 15m', recent: '12h 30m', sinceSync: '86h 15m', perDay: '2h 40m', price: '$59.99'},
+    {id: 814380, name: 'Sekiro: Shadows Die Twice', total: '23h 08m', recent: '23h 08m', sinceSync: '23h 08m', perDay: '3h 17m', price: null},
+    {id: 1245620, name: 'Elden Ring', total: '204h 52m', recent: '0m', sinceSync: '204h 52m', perDay: '5h 42m', price: '$59.99'},
+    {id: 1174180, name: 'Red Dead Redemption 2', total: '156h 22m', recent: '8h 45m', sinceSync: '156h 22m', perDay: '4h 20m', price: null},
+    {id: 2358720, name: 'Black Myth: Wukong', total: '15h 33m', recent: '15h 33m', sinceSync: '15h 33m', perDay: '2h 33m', price: null}
+] %}
+
+<div class="space-y-9 sm:space-y-10">
+    <header class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight text-white">Dashboard</h1>
+            <p class="mt-2 flex items-center gap-2 text-sm text-surface-500">
+                {{ icons.icon('sync', 'size-3.5 text-surface-600') }}
+                Last sync: 2 hours ago
+            </p>
+        </div>
+        <button type="button" class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-steam-400/30 bg-steam-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/20 transition-colors hover:bg-steam-500 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-steam-300">
+            {{ icons.icon('sync', 'size-4') }}
+            Sync
+        </button>
+    </header>
+
+    <section aria-label="Playtime and library overview" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {% for stat in stats %}
+            {% include 'frontend/components/stat_card.html.twig' with {stat: stat} only %}
+        {% endfor %}
+    </section>
+
+    <section aria-labelledby="games-heading" class="space-y-5">
+        <div class="flex items-center gap-4">
+            <h2 id="games-heading" class="text-lg font-semibold tracking-tight text-white">Games</h2>
+            <div aria-hidden="true" class="h-px flex-1 bg-linear-to-r from-surface-800 to-surface-800/20"></div>
+        </div>
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            {% for game in games %}
+                {% include 'frontend/components/game_card.html.twig' with {game: game} only %}
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

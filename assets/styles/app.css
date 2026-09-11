@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+/* Keep template scanning explicit, including reusable Twig components. */
+@source "../../templates";
+
+@theme {
+  --color-steam-50: #f0f4ff;
+  --color-steam-100: #dbe4ff;
+  --color-steam-200: #bac8ff;
+  --color-steam-300: #91a7ff;
+  --color-steam-400: #748ffc;
+  --color-steam-500: #5c7cfa;
+  --color-steam-600: #4c6ef5;
+  --color-steam-700: #4263eb;
+  --color-steam-800: #3b5bdb;
+  --color-steam-900: #364fc7;
+
+  --color-surface-50: #f8f9fa;
+  --color-surface-100: #f1f3f5;
+  --color-surface-200: #e9ecef;
+  --color-surface-300: #dee2e6;
+  --color-surface-400: #ced4da;
+  --color-surface-500: #adb5bd;
+  --color-surface-600: #868e96;
+  --color-surface-700: #495057;
+  --color-surface-800: #343a40;
+  --color-surface-900: #212529;
+  --color-surface-950: #0d1117;
+}
