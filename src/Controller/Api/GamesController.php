@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Api;
 
-use App\Services\Api\Synchronization\SteamGameDataPulling\SteamGameDataPuller;
+use App\Services\Api\Synchronization\SteamGameSynchronizerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final readonly class GamesController
 {
     public function __construct(
-        private readonly SteamGameDataPuller $steamGameDataPuller
+        private SteamGameSynchronizerInterface $steamGameSynchronizer
     ) {
 
     }
@@ -20,6 +20,6 @@ final readonly class GamesController
     #[Route(path: "", name: "get_games", methods: ["GET"])]
     public function getGames(): Response
     {
-        dd($this->steamGameDataPuller->pull());
+        $this->steamGameSynchronizer->synchronize();
     }
 }

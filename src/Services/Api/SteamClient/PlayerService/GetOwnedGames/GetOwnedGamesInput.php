@@ -12,7 +12,7 @@ final readonly class GetOwnedGamesInput
 
     /**
      * @param string $steamId
-     * @param array $appIdsFilter
+     * @param int[] $appIdsFilter
      */
     public function __construct(
         public string $steamId,

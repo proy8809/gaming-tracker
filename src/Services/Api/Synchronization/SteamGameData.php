@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Services\Api\Synchronization\SteamGameDataPulling;
+namespace App\Services\Api\Synchronization;
 
 final readonly class SteamGameData
 {
