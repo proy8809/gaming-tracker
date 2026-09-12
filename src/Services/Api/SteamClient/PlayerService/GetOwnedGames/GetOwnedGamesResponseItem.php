@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Api\SteamClient\PlayerService\GetOwnedGames;
 
-final readonly class GetOwnedGamesItem
+final readonly class GetOwnedGamesResponseItem
 {
     /**
      * @param int $appid

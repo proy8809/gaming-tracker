@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller\Api;
 
-use App\Services\Api\Synchronization\SteamGameSynchronizerInterface;
+use App\Services\Api\Synchronization\SteamGamesSynchronizerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -12,7 +13,8 @@ use Symfony\Component\Routing\Attribute\Route;
 final readonly class GamesController
 {
     public function __construct(
-        private SteamGameSynchronizerInterface $steamGameSynchronizer
+        private SteamGamesSynchronizerInterface $steamGameSynchronizer,
+        private ParameterBagInterface $parameterBag,
     ) {
 
     }
@@ -20,6 +22,7 @@ final readonly class GamesController
     #[Route(path: "", name: "get_games", methods: ["GET"])]
     public function getGames(): Response
     {
-        $this->steamGameSynchronizer->synchronize();
+        $steamUserId = (int) $this->parameterBag->get("app.steam_user_id");
+        $this->steamGameSynchronizer->synchronize($steamUserId);
     }
 }

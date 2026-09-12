@@ -3,12 +3,14 @@
 namespace App\Entity;
 
 use App\Repository\GameRepository;
+use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Game
 {
     #[ORM\Id]
@@ -28,19 +30,16 @@ class Game
     #[ORM\Column(type: Types::BIGINT)]
     private ?int $steamUserId = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $steamGameId = null;
+    #[ORM\Column(type: Types::BIGINT)]
+    private ?int $steamGameId = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $createDt = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $deleteDt = null;
-
     /**
      * @var Collection<int, SynchronizationGame>
      */
-    #[ORM\OneToMany(targetEntity: SynchronizationGame::class, mappedBy: 'game')]
+    #[ORM\OneToMany(targetEntity: SynchronizationGame::class, mappedBy: 'game', cascade: ['persist', 'remove'])]
     private Collection $synchronizationGames;
 
     public function __construct()
@@ -108,40 +107,27 @@ class Game
         return $this;
     }
 
-    public function getSteamGameId(): ?string
+    public function getSteamGameId(): ?int
     {
         return $this->steamGameId;
     }
 
-    public function setSteamGameId(string $steamGameId): static
+    public function setSteamGameId(int $steamGameId): static
     {
         $this->steamGameId = $steamGameId;
 
         return $this;
     }
 
-    public function getCreateDt(): ?\DateTimeImmutable
+    public function getCreateDt(): ?DateTimeImmutable
     {
         return $this->createDt;
     }
 
-    public function setCreateDt(\DateTimeImmutable $createDt): static
+    #[ORM\PrePersist]
+    public function setCreateDt(): void
     {
-        $this->createDt = $createDt;
-
-        return $this;
-    }
-
-    public function getDeleteDt(): ?\DateTimeImmutable
-    {
-        return $this->deleteDt;
-    }
-
-    public function setDeleteDt(?\DateTimeImmutable $deleteDt): static
-    {
-        $this->deleteDt = $deleteDt;
-
-        return $this;
+        $this->createDt = new DateTimeImmutable();
     }
 
     /**

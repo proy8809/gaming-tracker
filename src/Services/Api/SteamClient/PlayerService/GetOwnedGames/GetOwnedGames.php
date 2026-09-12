@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Api\SteamClient\PlayerService\GetOwnedGames;
 
+use App\Services\Api\SteamClient\Adapters\SteamResponseAdapterFactory;
 use App\Services\Api\SteamClient\SteamException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Symfony\Contracts\HttpClient\ResponseInterface;
 use Throwable;
 
 final readonly class GetOwnedGames
@@ -15,15 +15,17 @@ final readonly class GetOwnedGames
     private const string PATH = 'IPlayerService/GetOwnedGames/v0001';
 
     public function __construct(
-        private HttpClientInterface $httpClient,
-        private ParameterBagInterface $parameterBag,
+        private HttpClientInterface            $httpClient,
+        private SteamResponseAdapterFactory    $responseAdapterFactory,
+        private GetOwnedGamesResponseValidator $responseValidator,
+        private ParameterBagInterface          $parameterBag,
     ) {
 
     }
 
     /**
      * @param GetOwnedGamesInput $input
-     * @return GetOwnedGamesItem[]
+     * @return GetOwnedGamesResponseItem[]
      * @throws SteamException
      */
     public function execute(GetOwnedGamesInput $input): array
@@ -44,11 +46,14 @@ final readonly class GetOwnedGames
                 ],
             ]);
 
-            if (!$this->isInterpretable($response)) {
+            $adapter = $this->responseAdapterFactory->forSteamResponseFormat($input->format);
+            $parsedResponse = $adapter->parse($response);
+
+            if (!$this->responseValidator->isValid($parsedResponse)) {
                 return [];
             }
 
-            return array_map($this->rawToGetOwnedGamesItem(...), $response->toArray()['response']['games']);
+            return array_map($this->rawToGetOwnedGamesItem(...), $parsedResponse['response']['games'] ?? []);
         } catch (Throwable $t) {
             throw new SteamException($t);
         }
@@ -56,11 +61,11 @@ final readonly class GetOwnedGames
 
     /**
      * @param mixed[] $raw
-     * @return GetOwnedGamesItem
+     * @return GetOwnedGamesResponseItem
      */
-    private function rawToGetOwnedGamesItem(array $raw): GetOwnedGamesItem
+    private function rawToGetOwnedGamesItem(array $raw): GetOwnedGamesResponseItem
     {
-        return new GetOwnedGamesItem(
+        return new GetOwnedGamesResponseItem(
             appid: $raw['appid'],
             name: $raw['name'],
             playtimeForever: $raw['playtime_forever'] ?? 0,
@@ -75,31 +80,5 @@ final readonly class GetOwnedGames
             contentDescriptorIds: $raw['content_descriptorids'] ?? [],
             playtimeDisconnected: $raw['playtime_disconnected'] ?? 0
         );
-    }
-
-    /**
-     * @param ResponseInterface $response
-     * @return bool
-     * @throws \Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
-     */
-    private function isInterpretable(ResponseInterface $response): bool
-    {
-        if (!($responseContent = $response->toArray()['response'] ?? null)) {
-            return false;
-        }
-
-        if (!($responseContent['game_count'] ?? 0)) {
-            return false;
-        }
-
-        if (!($responseContent['games'] ?? null)) {
-            return false;
-        }
-
-        return true;
     }
 }

@@ -15,16 +15,18 @@ class SynchronizationGame
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'synchronizationGames')]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Synchronization $synchronization = null;
 
     #[ORM\ManyToOne(inversedBy: 'synchronizationGames')]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Game $game = null;
 
     #[ORM\Column(type: Types::BIGINT)]
-    private ?string $playtimeForever = null;
+    private ?int $playtimeForever = null;
 
     #[ORM\Column(type: Types::BIGINT)]
-    private ?string $playtimeTwoWeeks = null;
+    private ?int $playtimeTwoWeeks = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $lastPlayed = null;
@@ -65,24 +67,24 @@ class SynchronizationGame
         return $this;
     }
 
-    public function getPlaytimeForever(): ?string
+    public function getPlaytimeForever(): ?int
     {
         return $this->playtimeForever;
     }
 
-    public function setPlaytimeForever(string $playtimeForever): static
+    public function setPlaytimeForever(int $playtimeForever): static
     {
         $this->playtimeForever = $playtimeForever;
 
         return $this;
     }
 
-    public function getPlaytimeTwoWeeks(): ?string
+    public function getPlaytimeTwoWeeks(): ?int
     {
         return $this->playtimeTwoWeeks;
     }
 
-    public function setPlaytimeTwoWeeks(string $playtimeTwoWeeks): static
+    public function setPlaytimeTwoWeeks(int $playtimeTwoWeeks): static
     {
         $this->playtimeTwoWeeks = $playtimeTwoWeeks;
 

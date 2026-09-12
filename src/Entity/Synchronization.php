@@ -25,7 +25,7 @@ class Synchronization
     /**
      * @var Collection<int, SynchronizationGame>
      */
-    #[ORM\OneToMany(targetEntity: SynchronizationGame::class, mappedBy: 'synchronization')]
+    #[ORM\OneToMany(targetEntity: SynchronizationGame::class, mappedBy: 'synchronization', cascade: ['persist', 'remove'])]
     private Collection $synchronizationGames;
 
     public function __construct()
@@ -62,6 +62,7 @@ class Synchronization
         return $this->createDt;
     }
 
+    #[ORM\PrePersist]
     public function setCreateDt(\DateTimeImmutable $createDt): static
     {
         $this->createDt = $createDt;

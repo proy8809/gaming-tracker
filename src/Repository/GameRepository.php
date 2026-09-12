@@ -16,28 +16,28 @@ class GameRepository extends ServiceEntityRepository
         parent::__construct($registry, Game::class);
     }
 
-    //    /**
-    //     * @return Game[] Returns an array of Game objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('g')
-    //            ->andWhere('g.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('g.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * @param int $steamUserId
+     * @return Game[]
+     */
+    public function findBySteamUserId(int $steamUserId): array
+    {
+        return $this->findBy(['steamUserId' => $steamUserId]);
+    }
 
-    //    public function findOneBySomeField($value): ?Game
-    //    {
-    //        return $this->createQueryBuilder('g')
-    //            ->andWhere('g.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    /**
+     * @param int $steamUserId
+     * @param array $steamGameIds
+     * @return void
+     */
+    public function deleteBySteamUserIdAndSteamGameIds(int $steamUserId, array $steamGameIds): void
+    {
+        $qb = $this->createQueryBuilder('g');
+        $qb->delete()
+            ->where($qb->expr()->eq('g.steamUserId', ':steamUserId'))
+            ->andWhere($qb->expr()->in('g.steamGameId', ':steamGameIds'))
+            ->setParameter('steamGameIds', $steamGameIds)
+            ->getQuery()
+            ->execute();
+    }
 }
