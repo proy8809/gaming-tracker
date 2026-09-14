@@ -4,104 +4,121 @@ declare(strict_types=1);
 
 namespace App\Services\Api\Synchronization;
 
-use App\Entity\Game;
+use App\Entity\Game as GameEntity;
+use App\Entity\Synchronization as SynchronizationEntity;
+use App\Entity\SynchronizationGame as SynchronizationGameEntity;
 use App\Repository\GameRepository;
 use App\Services\Api\SteamClient\PlayerService\GetOwnedGames\GetOwnedGames;
 use App\Services\Api\SteamClient\PlayerService\GetOwnedGames\GetOwnedGamesInput;
 use App\Services\Api\SteamClient\PlayerService\GetOwnedGames\GetOwnedGamesResponseItem;
-use App\Services\Api\SteamClient\SteamException;
+use App\Services\Api\SteamClient\SteamResponseFormat;
+use App\Services\Api\Synchronization\Domain\Synchronization;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class SteamGamesSynchronizer implements SteamGamesSynchronizerInterface
 {
     public function __construct(
         private GetOwnedGames $getOwnedGames,
-        private GameRepository $gameRepository,
         private EntityManagerInterface $entityManager,
+        private GameRepository $gameRepository
     ) {
     }
 
-    /**
-     * @param int $steamUserId
-     * @throws SteamException
-     */
-    public function synchronize(int $steamUserId): void
+
+    public function execute(int $steamUserId): void
     {
-        $steamGamesData = $this->getSteamGamesData($steamUserId);
-        $storedGames = $this->gameRepository->findBySteamUserId($steamUserId);
+        $synchronization = new Synchronization($steamUserId);
 
-        dd($storedGames);
-        $addedSteamGameIds = $this->getAddedSteamGameIds($steamGamesData, $storedGames);
-        $removedSteamGameIds = $this->getRemovedSteamGameIds($steamGamesData, $storedGames);
-
-        $addedGamesData = array_filter(
-            $steamGamesData,
-            static fn(SteamGameData $steamGameData) => in_array($steamGameData->steamGameId, $addedSteamGameIds)
-        );
-
-        foreach ($addedGamesData as $addedGameData) {
-            $this->entityManager->persist($addedGameData->toGameEntity());
-        }
-
-        $removedGames = array_filter(
-            $storedGames,
-            static fn(Game $game) => in_array($game->getSteamGameId(), $removedSteamGameIds)
-        );
-
-        foreach ($removedGames as $removedGame) {
-            $this->entityManager->remove($removedGame);
-        }
-
-        $this->entityManager->flush();
-    }
-
-    /**
-     * @param int $steamUserId
-     * @return SteamGameData[]
-     * @throws SteamException
-     */
-    private function getSteamGamesData(int $steamUserId): array
-    {
-        $ownedGames = $this->getOwnedGames->execute(
+        $gameEntities = $this->gameRepository->findBySteamUserId($steamUserId);
+        $steamGames = $this->getOwnedGames->execute(
             new GetOwnedGamesInput(
                 steamId: $steamUserId,
+                format: SteamResponseFormat::JSON,
                 appIdsFilter: []
             )
         );
 
-        return array_map(fn (GetOwnedGamesResponseItem $ownedGame) => new SteamGameData(
-            name: $ownedGame->name,
-            steamGameId: $ownedGame->appid,
-            steamUserId: $steamUserId,
-            playtimeForever: $ownedGame->playtimeForever,
-            playtimeTwoWeeks: $ownedGame->playtimeTwoWeeks,
-            lastPlayed: $ownedGame->rtimeLastPlayed
-        ), $ownedGames);
+        $this->getDataFromSteam($synchronization, $gameEntities, $steamGames);
+        $this->saveActiveGames($synchronization, $gameEntities);
+        $this->removeObsoleteGames($synchronization, $gameEntities);
+        $this->entityManager->flush();
     }
 
     /**
-     * @param SteamGameData[] $steamGamesData
-     * @param Game[] $storedGamesData
-     * @return int[]
+     * @param GameEntity[] $gameEntities
+     * @param GetOwnedGamesResponseItem[] $steamGames
      */
-    private function getAddedSteamGameIds(array $steamGamesData, array $storedGamesData): array
+    private function getDataFromSteam(Synchronization $synchronization, array $gameEntities, array $steamGames): void
     {
-        $storedGameIds = array_map(static fn (Game $game) => $game->getSteamGameId(), $storedGamesData);
-        $steamGameIds = array_map(static fn (SteamGameData $gameData) => $gameData->steamGameId, $steamGamesData);
+        foreach ($gameEntities as $gameEntity) {
+            $synchronization->addGame($gameEntity->getSteamGameId(), $gameEntity->getName());
+        }
 
-        return array_diff($steamGameIds, $storedGameIds);
+        $gameEntitySteamGameIds = array_map(static fn (GameEntity $gameEntity) => $gameEntity->getSteamGameId(), $gameEntities);
+        $steamGameIds = array_map(static fn (GetOwnedGamesResponseItem $steamGame) => $steamGame->appid, $steamGames);
+        $removedSteamGameIds = array_diff($gameEntitySteamGameIds, $steamGameIds);
+
+        $synchronization->removeGames($removedSteamGameIds);
+
+        foreach ($steamGames as $steamGame) {
+            if (!$synchronization->exists($steamGame->appid)) {
+                $synchronization->addGame($steamGame->appid, $steamGame->name);
+            }
+
+            $synchronization->setGameStats(
+                $steamGame->appid,
+                $steamGame->playtimeForever,
+                $steamGame->playtimeTwoWeeks,
+                $steamGame->rtimeLastPlayed
+            );
+        }
     }
 
     /**
-     * @param SteamGameData[] $steamGamesData
-     * @param Game[] $storedGamesData
-     * @return int[]
- */
-    private function getRemovedSteamGameIds(array $steamGamesData, array $storedGamesData): array
+     * @param GameEntity[] $gameEntities
+     */
+    private function saveActiveGames(Synchronization $synchronization, array $gameEntities): void
     {
-        $storedGameIds = array_map(static fn (Game $game) => $game->getSteamGameId(), $storedGamesData);
-        $steamGameIds = array_map(static fn (SteamGameData $gameData) => $gameData->steamGameId, $steamGamesData);
+        $synchronizationEntity = new SynchronizationEntity();
+        $synchronizationEntity->setSteamUserId($synchronization->getUserId());
+        $this->entityManager->persist($synchronizationEntity);
 
-        return array_diff($storedGameIds, $steamGameIds);
+        foreach ($synchronization->getGames() as $game) {
+            $gameEntity = array_find(
+                $gameEntities,
+                static fn (GameEntity $storedGame) => $storedGame->getSteamGameId() === $game->getGameId()
+            );
+
+            if (!$gameEntity) {
+                $gameEntity = new GameEntity();
+                $gameEntity->setName($game->getName());
+                $gameEntity->setImageUrl($game->getImageUrl());
+                $gameEntity->setSteamGameId($game->getGameId());
+                $gameEntity->setSteamUserId($synchronization->getUserId());
+                $this->entityManager->persist($gameEntity);
+            }
+
+            $synchronizationGameEntity = new SynchronizationGameEntity();
+            $synchronizationGameEntity->setPlaytimeForever($game->getPlaytimeForever());
+            $synchronizationGameEntity->setPlaytimeTwoWeeks($game->getPlaytimeTwoWeeks());
+            $synchronizationGameEntity->setLastPlayed(\DateTimeImmutable::createFromTimestamp($game->getLastPlayed()));
+            $synchronizationGameEntity->setGame($gameEntity);
+            $synchronizationGameEntity->setSynchronization($synchronizationEntity);
+
+            $this->entityManager->persist($synchronizationGameEntity);
+        }
+    }
+
+    private function removeObsoleteGames(Synchronization $synchronization, array $gameEntities): void
+    {
+        $activeSteamGameIds = array_map(static fn ($game) => $game->getGameId(), $synchronization->getGames());
+        $obsoleteGameEntities = array_filter(
+            $gameEntities,
+            static fn (GameEntity $gameEntity) => !in_array($gameEntity->getSteamGameId(), $activeSteamGameIds)
+        );
+
+        foreach ($obsoleteGameEntities as $obsoleteGameEntity) {
+            $this->entityManager->remove($obsoleteGameEntity);
+        }
     }
 }

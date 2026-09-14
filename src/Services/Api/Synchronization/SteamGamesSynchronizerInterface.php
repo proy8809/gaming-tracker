@@ -6,5 +6,5 @@ namespace App\Services\Api\Synchronization;
 
 interface SteamGamesSynchronizerInterface
 {
-    public function synchronize(int $steamUserId): void;
+    public function execute(int $steamUserId): void;
 }

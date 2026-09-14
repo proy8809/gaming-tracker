@@ -23,6 +23,6 @@ final readonly class GamesController
     public function getGames(): Response
     {
         $steamUserId = (int) $this->parameterBag->get("app.steam_user_id");
-        $this->steamGameSynchronizer->synchronize($steamUserId);
+        $this->steamGameSynchronizer->execute($steamUserId);
     }
 }

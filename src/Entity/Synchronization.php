@@ -9,6 +9,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: SynchronizationRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Synchronization
 {
     #[ORM\Id]
@@ -63,11 +64,9 @@ class Synchronization
     }
 
     #[ORM\PrePersist]
-    public function setCreateDt(\DateTimeImmutable $createDt): static
+    public function setCreateDt(): void
     {
-        $this->createDt = $createDt;
-
-        return $this;
+        $this->createDt = new \DateTimeImmutable();
     }
 
     /**

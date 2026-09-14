@@ -47,38 +47,15 @@ final readonly class GetOwnedGames
             ]);
 
             $adapter = $this->responseAdapterFactory->forSteamResponseFormat($input->format);
-            $parsedResponse = $adapter->parse($response);
+            $rawResponse = $adapter->parse($response);
 
-            if (!$this->responseValidator->isValid($parsedResponse)) {
+            if (!$this->responseValidator->isValid($rawResponse)) {
                 return [];
             }
 
-            return array_map($this->rawToGetOwnedGamesItem(...), $parsedResponse['response']['games'] ?? []);
+            return array_map(GetOwnedGamesResponseItem::fromRaw(...), $rawResponse['response']['games'] ?? []);
         } catch (Throwable $t) {
             throw new SteamException($t);
         }
-    }
-
-    /**
-     * @param mixed[] $raw
-     * @return GetOwnedGamesResponseItem
-     */
-    private function rawToGetOwnedGamesItem(array $raw): GetOwnedGamesResponseItem
-    {
-        return new GetOwnedGamesResponseItem(
-            appid: $raw['appid'],
-            name: $raw['name'],
-            playtimeForever: $raw['playtime_forever'] ?? 0,
-            playtimeTwoWeeks: $raw['playtime_2weeks'] ?? 0,
-            imgIconUrl: $raw['img_icon_url'] ?? '',
-            hasCommunityVisibleStats: $raw['has_community_visible_stats'] ?? false,
-            playtimeWindowsForever: $raw['playtime_windows_forever'] ?? 0,
-            playtimeMacForever: $raw['playtime_mac_forever'] ?? 0,
-            playtimeLinuxForever: $raw['playtime_linux_forever'] ?? 0,
-            playtimeDeckForever: $raw['playtime_deck_forever'] ?? 0,
-            rtimeLastPlayed: $raw['rtime_last_played'] ?? 0,
-            contentDescriptorIds: $raw['content_descriptorids'] ?? [],
-            playtimeDisconnected: $raw['playtime_disconnected'] ?? 0
-        );
     }
 }

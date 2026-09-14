@@ -20,7 +20,7 @@ final readonly class GetOwnedGamesResponseItem
      * @param int[] $contentDescriptorIds
      * @param int $playtimeDisconnected
      */
-    public function __construct(
+    private function __construct(
         public int $appid,
         public string $name,
         public int $playtimeForever,
@@ -35,5 +35,28 @@ final readonly class GetOwnedGamesResponseItem
         public array $contentDescriptorIds,
         public int $playtimeDisconnected
     ) {
+    }
+
+    /**
+     * @param mixed[] $raw
+     * @return self
+     */
+    public static function fromRaw(array $raw): self
+    {
+        return new self(
+            appid: $raw['appid'],
+            name: $raw['name'],
+            playtimeForever: $raw['playtime_forever'] ?? 0,
+            playtimeTwoWeeks: $raw['playtime_2weeks'] ?? 0,
+            imgIconUrl: $raw['img_icon_url'] ?? '',
+            hasCommunityVisibleStats: $raw['has_community_visible_stats'] ?? false,
+            playtimeWindowsForever: $raw['playtime_windows_forever'] ?? 0,
+            playtimeMacForever: $raw['playtime_mac_forever'] ?? 0,
+            playtimeLinuxForever: $raw['playtime_linux_forever'] ?? 0,
+            playtimeDeckForever: $raw['playtime_deck_forever'] ?? 0,
+            rtimeLastPlayed: $raw['rtime_last_played'] ?? 0,
+            contentDescriptorIds: $raw['content_descriptorids'] ?? [],
+            playtimeDisconnected: $raw['playtime_disconnected'] ?? 0
+        );
     }
 }

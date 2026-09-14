@@ -25,7 +25,7 @@ class Game
     private ?string $imageUrl = null;
 
     #[ORM\Column(type: Types::BIGINT, nullable: true)]
-    private ?string $pricePaid = null;
+    private ?int $pricePaid = null;
 
     #[ORM\Column(type: Types::BIGINT)]
     private ?int $steamUserId = null;
