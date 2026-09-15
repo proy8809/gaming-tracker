@@ -15,6 +15,12 @@ api:
     prefix: /api
     name_prefix: api_
 
+api_login:
+    path: /api/login
+    methods: [POST]
+    defaults:
+        _controller: Symfony\Bundle\FrameworkBundle\Controller\TemplateController::templateAction
+
 frontend:
     resource:
         path: ../src/Controller/Frontend

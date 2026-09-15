@@ -13,13 +13,11 @@ class GetOwnedGamesResponseValidator
             return false;
         }
 
-        $gameCount = $responseContentResponseNode['game_count'] ?? 0;
-        if (!$gameCount) {
+        if (!isset($responseContentResponseNode['game_count'])) {
             return false;
         }
 
-        $games = $responseContentResponseNode['games'] ?? null;
-        if (!$games) {
+        if (!isset($responseContentResponseNode['games'])) {
             return false;
         }
 
